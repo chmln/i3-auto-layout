@@ -2,6 +2,7 @@
 use anyhow::{anyhow as err, Result};
 use futures::channel::mpsc;
 use futures::stream::StreamExt;
+use futures::SinkExt;
 use tokio_i3ipc::{
     event::{Event, Subscribe, WindowChange},
     msg::Msg,
@@ -35,7 +36,7 @@ impl Split {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let (send, mut recv) = mpsc::unbounded::<Split>();
+    let (mut send, mut recv) = mpsc::channel::<Split>(0);
 
     let s_handle = std::thread::spawn(async move || -> Result<()> {
         let mut i3 = I3::connect().await?;
@@ -45,7 +46,7 @@ async fn main() -> Result<()> {
         while let Some(Ok(Event::Window(ev))) = listener.next().await {
             if let WindowChange::Focus = ev.change {
                 let rect = ev.container.window_rect;
-                send.unbounded_send(Split::from(rect))?;
+                send.send(Split::from(rect)).await?;
             }
         }
         Ok(())
