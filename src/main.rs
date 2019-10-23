@@ -21,7 +21,7 @@ impl From<Rect> for Split {
         if r.width > r.height {
             return Split::Horizontally;
         }
-        return Split::Vertically;
+        Split::Vertically
     }
 }
 
