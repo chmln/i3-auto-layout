@@ -55,16 +55,16 @@ async fn main() -> Result<()> {
     let r_handle = std::thread::spawn(async move || -> Result<()> {
         let mut i3 = I3::connect().await?;
         while let Some(split) = recv.next().await {
-            i3.send_msg_body(Msg::RunCommand, split.to_string())
-                .await?;
+            i3.send_msg_body(Msg::RunCommand, split.to_string()).await?;
         }
         Ok(())
     });
 
     futures::future::try_join(
         s_handle.join().map_err(|_| err!("failed to join thread"))?,
-        r_handle.join().map_err(|_| err!("failed to join thread"))?
-    ).await?;
+        r_handle.join().map_err(|_| err!("failed to join thread"))?,
+    )
+    .await?;
 
     Ok(())
 }
