@@ -1,4 +1,3 @@
-#![feature(async_closure)]
 use anyhow::{anyhow as err, Result};
 use futures::channel::mpsc;
 use futures::stream::StreamExt;
@@ -19,14 +18,15 @@ enum Split {
 impl From<Rect> for Split {
     fn from(r: Rect) -> Self {
         if r.width > r.height {
-            return Split::Horizontally;
+            Split::Horizontally
+        } else {
+            Split::Vertically
         }
-        Split::Vertically
     }
 }
 
 impl Split {
-    fn to_string(&self) -> &'static str {
+    fn to_cmd(&self) -> &'static str {
         match self {
             Split::Horizontally => "split h",
             Split::Vertically => "split v",
@@ -38,26 +38,30 @@ impl Split {
 async fn main() -> Result<()> {
     let (mut send, mut recv) = mpsc::channel::<Split>(0);
 
-    let s_handle = std::thread::spawn(async move || -> Result<()> {
-        let mut i3 = I3::connect().await?;
-        i3.subscribe([Subscribe::Window]).await?;
-        let mut listener = i3.listen();
+    let s_handle = std::thread::spawn(|| {
+        async move {
+            let mut i3 = I3::connect().await?;
+            i3.subscribe([Subscribe::Window]).await?;
+            let mut listener = i3.listen();
 
-        while let Some(Ok(Event::Window(ev))) = listener.next().await {
-            if let WindowChange::Focus = ev.change {
-                let rect = ev.container.window_rect;
-                send.send(Split::from(rect)).await?;
+            while let Some(Ok(Event::Window(ev))) = listener.next().await {
+                if let WindowChange::Focus = ev.change {
+                    let rect = ev.container.window_rect;
+                    send.send(Split::from(rect)).await?;
+                }
             }
+            Ok(())
         }
-        Ok(())
     });
 
-    let r_handle = std::thread::spawn(async move || -> Result<()> {
-        let mut i3 = I3::connect().await?;
-        while let Some(split) = recv.next().await {
-            i3.send_msg_body(Msg::RunCommand, split.to_string()).await?;
+    let r_handle = std::thread::spawn(|| {
+        async move {
+            let mut i3 = I3::connect().await?;
+            while let Some(split) = recv.next().await {
+                i3.send_msg_body(Msg::RunCommand, split.to_cmd()).await?;
+            }
+            Result::<_>::Ok(())
         }
-        Ok(())
     });
 
     futures::future::try_join(
