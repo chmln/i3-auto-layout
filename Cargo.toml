@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio-i3ipc = { git = "https://github.com/leshow/tokio-i3ipc" }
+tokio-i3ipc = "0.6.0"
 futures = { version = "0.3.1", default-features = false }
-tokio = { version = "0.2.2", default-features = false, features = ["rt-threaded", "macros"] }
+tokio = { version = "0.2.4", default-features = false, features = ["rt-threaded", "macros"] }
 anyhow = "1.0.25"
