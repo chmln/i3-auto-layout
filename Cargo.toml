@@ -7,7 +7,8 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio-i3ipc = { path = "/home/greg/Workspace/tokio-i3ipc" }
+# Waiting on https://github.com/leshow/tokio-i3ipc/pull/1
+tokio-i3ipc = { git = "https://github.com/chmln/tokio-i3ipc" }
 futures = { version = "0.3.1", default-features = false, features = [] }
 tokio = { version = "0.2.10", default-features = false, features = ["rt-threaded", "macros", "sync"] }
 anyhow = "1.0.26"
