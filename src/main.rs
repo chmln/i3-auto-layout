@@ -1,74 +1,75 @@
-use anyhow::{anyhow as err, Result};
-use futures::channel::mpsc;
-use futures::stream::StreamExt;
-use futures::SinkExt;
+use anyhow::{Error, Result};
+use futures::{future, StreamExt};
+use tokio::sync::mpsc;
 use tokio_i3ipc::{
     event::{Event, Subscribe, WindowChange},
     msg::Msg,
-    reply::Rect,
+    reply::{Node, NodeLayout, Rect},
     I3,
 };
 
-#[derive(Debug)]
-enum Split {
-    Horizontally,
-    Vertically,
+#[rustfmt::skip]
+fn split_rect(r: Rect) -> &'static str {
+    if r.width > r.height { "split h" }
+    else { "split v" }
 }
 
-impl From<Rect> for Split {
-    fn from(r: Rect) -> Self {
-        if r.width > r.height {
-            Split::Horizontally
-        } else {
-            Split::Vertically
-        }
-    }
-}
-
-impl Split {
-    fn to_cmd(&self) -> &'static str {
-        match self {
-            Split::Horizontally => "split h",
-            Split::Vertically => "split v",
-        }
+// walk the tree and determine if `window_id` has tabbed parent
+fn find_child(node: &Node, window_id: usize, tabbed: bool) -> bool {
+    if tabbed || node.id == window_id {
+        tabbed
+    } else {
+        node.nodes.iter().any(|child| {
+            find_child(
+                child,
+                window_id,
+                match node.layout {
+                    NodeLayout::Tabbed | NodeLayout::Stacked => true,
+                    _ => false,
+                },
+            )
+        })
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let (mut send, mut recv) = mpsc::channel::<Split>(0);
+    let (mut send, mut recv) = mpsc::channel::<&'static str>(1);
 
-    let s_handle = std::thread::spawn(|| {
-        async move {
+    let s_handle = tokio::spawn(async move {
+        let mut event_listener = {
             let mut i3 = I3::connect().await?;
             i3.subscribe([Subscribe::Window]).await?;
-            let mut listener = i3.listen();
+            i3.listen()
+        };
 
-            while let Some(Ok(Event::Window(ev))) = listener.next().await {
-                if let WindowChange::Focus = ev.change {
-                    let rect = ev.container.window_rect;
-                    send.send(Split::from(rect)).await?;
+        let i3 = &mut I3::connect().await?;
+
+        while let Some(Ok(Event::Window(window_data))) = event_listener.next().await {
+            if WindowChange::Focus == window_data.change {
+                let tree = i3.get_tree().await?;
+                let is_tabbed = match window_data.container.layout {
+                    NodeLayout::Tabbed | NodeLayout::Stacked => true,
+                    _ => false,
+                };
+
+                if !find_child(&tree, window_data.container.id, is_tabbed) {
+                    send.send(split_rect(window_data.container.window_rect))
+                        .await?;
                 }
             }
-            Ok(())
         }
+        Ok::<_, Error>(())
     });
 
-    let r_handle = std::thread::spawn(|| {
-        async move {
-            let mut i3 = I3::connect().await?;
-            while let Some(split) = recv.next().await {
-                i3.send_msg_body(Msg::RunCommand, split.to_cmd()).await?;
-            }
-            Result::<_>::Ok(())
+    let r_handle = tokio::spawn(async move {
+        let mut i3 = I3::connect().await?;
+        while let Some(cmd) = recv.recv().await {
+            i3.send_msg_body(Msg::RunCommand, cmd).await?;
         }
+        Ok::<_, Error>(())
     });
 
-    futures::future::try_join(
-        s_handle.join().map_err(|_| err!("failed to join thread"))?,
-        r_handle.join().map_err(|_| err!("failed to join thread"))?,
-    )
-    .await?;
-
+    future::try_join_all(vec![s_handle, r_handle]).await?;
     Ok(())
 }
