@@ -1,14 +1,22 @@
 [package]
 name = "i3-auto-layout"
+description = "Automatic, optimal tiling for i3wm"
 version = "0.1.0"
-authors = ["greg <gregory.mkv@gmail.com>"]
+authors = ["Gregory <gregory.mkv@gmail.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+homepage = "https://github.com/chmln/i3-auto-layout"
+repository = "https://github.com/chmln/i3-auto-layout"
+readme = "README.md"
 
 [dependencies]
-# Waiting on https://github.com/leshow/tokio-i3ipc/pull/1
-tokio-i3ipc = { git = "https://github.com/chmln/tokio-i3ipc" }
-futures = { version = "0.3.1", default-features = false, features = [] }
+tokio-i3ipc = { git = "https://github.com/leshow/tokio-i3ipc" }
+futures= { version = "0.3.1", default-features = false }
 tokio = { version = "0.2.10", default-features = false, features = ["rt-threaded", "macros", "sync"] }
 anyhow = "1.0.26"
+
+[profile.release]
+lto = true
+opt-level = 3
+debug = false
+debug-assertions = false
+
