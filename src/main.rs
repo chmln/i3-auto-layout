@@ -1,6 +1,5 @@
 use anyhow::{Error, Result};
-use futures::{future, StreamExt};
-use tokio::sync::mpsc;
+use tokio::{stream::StreamExt, sync::mpsc};
 use tokio_i3ipc::{
     event::{Event, Subscribe, WindowChange},
     msg::Msg,
@@ -15,18 +14,15 @@ fn split_rect(r: Rect) -> &'static str {
 }
 
 // walk the tree and determine if `window_id` has tabbed parent
-fn find_child(node: &Node, window_id: usize, tabbed: bool) -> bool {
-    if tabbed || node.id == window_id {
+fn has_tabbed_parent(node: &Node, window_id: usize, tabbed: bool) -> bool {
+    if node.id == window_id {
         tabbed
     } else {
         node.nodes.iter().any(|child| {
-            find_child(
+            has_tabbed_parent(
                 child,
                 window_id,
-                match node.layout {
-                    NodeLayout::Tabbed | NodeLayout::Stacked => true,
-                    _ => false,
-                },
+                matches!(node.layout, NodeLayout::Tabbed | NodeLayout::Stacked),
             )
         })
     }
@@ -34,7 +30,8 @@ fn find_child(node: &Node, window_id: usize, tabbed: bool) -> bool {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let (mut send, mut recv) = mpsc::channel::<&'static str>(1);
+    flexi_logger::Logger::with_env().start()?;
+    let (mut send, mut recv) = mpsc::channel::<&'static str>(10);
 
     let s_handle = tokio::spawn(async move {
         let mut event_listener = {
@@ -47,18 +44,24 @@ async fn main() -> Result<()> {
 
         while let Some(Ok(Event::Window(window_data))) = event_listener.next().await {
             if WindowChange::Focus == window_data.change {
-                let tree = i3.get_tree().await?;
-                let is_tabbed = match window_data.container.layout {
-                    NodeLayout::Tabbed | NodeLayout::Stacked => true,
-                    _ => false,
-                };
+                let is_tabbed = matches!(
+                    window_data.container.layout,
+                    NodeLayout::Tabbed | NodeLayout::Stacked
+                );
 
-                if !find_child(&tree, window_data.container.id, is_tabbed) {
+                let (name, tabbed_parent) = (
+                    window_data.container.name,
+                    has_tabbed_parent(&i3.get_tree().await?, window_data.container.id, is_tabbed),
+                );
+                log::debug!("name={:?}, tabbed_parent={}", &name, tabbed_parent);
+
+                if !tabbed_parent {
                     send.send(split_rect(window_data.container.window_rect))
                         .await?;
                 }
             }
         }
+        log::debug!("Sender loop ended");
         Ok::<_, Error>(())
     });
 
@@ -67,9 +70,11 @@ async fn main() -> Result<()> {
         while let Some(cmd) = recv.recv().await {
             i3.send_msg_body(Msg::RunCommand, cmd).await?;
         }
+        log::debug!("Receiver loop ended");
         Ok::<_, Error>(())
     });
 
-    future::try_join_all(vec![s_handle, r_handle]).await?;
+    let (send, recv) = tokio::try_join!(s_handle, r_handle)?;
+    send.and(recv)?;
     Ok(())
 }

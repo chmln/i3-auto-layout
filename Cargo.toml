@@ -10,9 +10,10 @@ readme = "README.md"
 
 [dependencies]
 tokio-i3ipc = { git = "https://github.com/leshow/tokio-i3ipc" }
-futures= { version = "0.3.1", default-features = false }
-tokio = { version = "0.2.10", default-features = false, features = ["rt-threaded", "macros", "sync"] }
-anyhow = "1.0.26"
+tokio = { version = "0.2.13", default-features = false, features = ["rt-threaded", "macros", "sync", "stream"] }
+anyhow = "1.0.27"
+log = "0.4.8"
+flexi_logger = { version = "0.15.1", default-features = false, features = ["colors"] }
 
 [profile.release]
 lto = true
