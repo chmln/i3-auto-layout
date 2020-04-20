@@ -10,9 +10,7 @@ Automatic, optimal tiling for i3wm. An appropriate split is set for each window 
 
 # Installation
 
-```sh
-cargo install --git https://github.com/chmln/i3-auto-layout
-```
+Grab a binary from [releases](https://github.com/chmln/i3-auto-layout/releases) OR `cargo install --git https://github.com/chmln/i3-auto-layout`
 
 Then somewhere in your i3 config
 
