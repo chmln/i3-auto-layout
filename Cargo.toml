@@ -9,8 +9,8 @@ repository = "https://github.com/chmln/i3-auto-layout"
 readme = "README.md"
 
 [dependencies]
-tokio-i3ipc = { git = "https://github.com/leshow/tokio-i3ipc" }
-tokio = { version = "0.2.17", default-features = false, features = ["rt-threaded", "macros", "sync", "stream"] }
+tokio-i3ipc = "0.8.0"
+tokio = { version = "0.2.20", default-features = false, features = ["rt-threaded", "macros", "sync", "stream"] }
 anyhow = "1.0.28"
 log = "0.4.8"
 flexi_logger = { version = "0.15.2", default-features = false }
