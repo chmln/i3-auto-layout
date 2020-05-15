@@ -90,7 +90,7 @@ dependencies = [
 
 [[package]]
 name = "i3-auto-layout"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "anyhow 1.0.31 (registry+https://github.com/rust-lang/crates.io-index)",
  "flexi_logger 0.15.2 (registry+https://github.com/rust-lang/crates.io-index)",
