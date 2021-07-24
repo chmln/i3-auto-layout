@@ -1,5 +1,6 @@
 use anyhow::{Error, Result};
-use tokio::{stream::StreamExt, sync::mpsc};
+use tokio::{sync::mpsc};
+use tokio_stream::StreamExt;
 use tokio_i3ipc::{
     event::{Event, Subscribe, WindowChange},
     msg::Msg,
@@ -31,7 +32,7 @@ fn has_tabbed_parent(node: &Node, window_id: usize, tabbed: bool) -> bool {
 #[tokio::main]
 async fn main() -> Result<()> {
     flexi_logger::Logger::with_env().start()?;
-    let (mut send, mut recv) = mpsc::channel::<&'static str>(10);
+    let (send, mut recv) = mpsc::channel::<&'static str>(10);
 
     let s_handle = tokio::spawn(async move {
         let mut event_listener = {
