@@ -31,7 +31,7 @@ fn has_tabbed_parent(node: &Node, window_id: usize, tabbed: bool) -> bool {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    flexi_logger::Logger::with_env().start()?;
+    flexi_logger::Logger::try_with_env()?.start()?;
     let (send, mut recv) = mpsc::channel::<&'static str>(10);
 
     let s_handle = tokio::spawn(async move {
