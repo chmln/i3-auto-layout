@@ -10,15 +10,16 @@ readme = "README.md"
 license = "MIT"
 
 [dependencies]
-tokio-i3ipc = "0.13.0"
-tokio = { version = "1.9.0", default-features = false, features = ["rt-multi-thread", "macros", "sync"] }
-anyhow = "1.0.42"
-log = "0.4.14"
-flexi_logger = { version = "0.18.0", default-features = false }
-tokio-stream = "0.1.7"
+tokio-i3ipc = "0.14.0"
+tokio = { version = "1.19.2", default-features = false, features = ["rt-multi-thread", "macros", "sync"] }
+anyhow = "1.0.57"
+log = "0.4.17"
+flexi_logger = { version = "0.22.5", default-features = false }
+tokio-stream = "0.1.9"
 
 [profile.release]
 lto = true
 opt-level = 3
 debug = false
 debug-assertions = false
+
