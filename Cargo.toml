@@ -1,7 +1,7 @@
 [package]
 name = "i3-auto-layout"
 description = "Automatic, optimal tiling for i3wm"
-version = "0.3.7"
+version = "0.3.8"
 authors = ["Pando85 <pando855@gmail.com>"]
 edition = "2024"
 homepage = "https://github.com/pando85/i3-auto-layout"

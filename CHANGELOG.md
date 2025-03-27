@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.8](https://github.com/pando85/i3-auto-layout/tree/v0.3.8) - 2025-03-27
+
+### Build
+
+- Update Rust crate anyhow to v1.0.96
+- Update Rust crate anyhow to v1.0.97
+- Update Rust crate tokio to v1.44.0
+- Update Rust crate log to v0.4.26
+- Update KSXGitHub/github-actions-deploy-aur action to v4
+- Update Rust crate tokio to v1.44.1
+- Update to 2024 edition
+- Add sha256sum to release binaries
+
 ## [v0.3.7](https://github.com/pando85/i3-auto-layout/tree/v0.3.7) - 2025-01-24
 
 ### Fixed

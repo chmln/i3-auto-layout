@@ -144,7 +144,7 @@ checksum = "d231dfb89cfffdbc30e7fc41579ed6066ad03abda9e567ccafae602b97ec5024"
 
 [[package]]
 name = "i3-auto-layout"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "anyhow",
  "cargo-husky",
